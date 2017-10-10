@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>登录首页</title>
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/room.css">
+    <script src="js/jquery-3.0.0.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <link rel="shortcut icon" href="favicon.ico"/>
+    <!--index-->
+    <script>
+        $(function(){
+            var userinfo="";
+            //===========================登录界面效果====================================================
+            $("#chat").hide();//让聊天室事前隐藏
+            $("#photo").on("click",function(ev){
+                ev.stopPropagation();
+                $("#photobox").slideToggle();//往盒子里面添加内容
+                $("#photobox li").on("click",function(ev){
+                    ev.stopPropagation();
+                    //把头像上的图片中的路径变成对应的
+                    var thisImgUrl=$(this).find("img").attr("src");
+                    //alert(thisImgUrl);
+                    $("#photo").find("img").attr("src",thisImgUrl);
+                    $("#photobox").fadeOut();
+                });
+
+            });
+            //点击任意一个地方都可以关闭盒子；
+            $(document).on("click",function(){
+                $("#photobox").fadeOut();
+            });
+            //----单选框点击的时候更换photobox里面的图片链接----------
+            var imageUrl=['mm1','mm2','mm3','mm4','mm5','mm6','mm7','mm8','mm9','mm10','mm11','mm12','mm13','mm14','mm15','mm16','mm17','mm18'];
+            var basept=$("#photobox").html();//记录男生头像
+            $('.radio input[type="radio"]').on("click",function(){
+                //当选中女生的时候，就更换box里面的头像链接
+               if($(this).attr("value")=="woman"){
+                   $("#photobox li").each(function(index,element){
+                       var url="images/"+imageUrl[index]+".jpg";
+                       $(element).find("img").attr("src",url);
+                   });
+                   //设置默认的photo头像
+                   $("#photo").find("img").attr("src","images/mm1.jpg");
+               }else{
+                   $("#photobox").html(basept);//否则就是男生头像
+                   $("#photo").find("img").attr("src","images/pt1.jpg");
+               };
+           });
+
+            //================================设定服务器链接======================
+
+            var clientSocket=io();
+
+            //1）获取用户信息==================
+            // 1-1Login-sub提交数据事件
+            $("#sub").on("click",function(){
+                //限制username设定------
+                var reg=/^[\u4e00-\u9fa5_a-zA-Z0-9-]{1,16}$/;
+                var regresult=reg.test( $.trim($("#username").val()) );
+                if(regresult==false || $("#username").val()=="" ){
+                    alert("请输入正确的用户名")
+                    return;
+                };
+                //获取表单数据------
+                var nickname=$.trim( $("#username").val());//用户名
+                var imageUrl=$("#photo").find("img").attr("src");//图片路径images/pt1.jpg
+                var inLine=$("#condition option:checked").attr("value");//inline
+                var sex=$('.radio input[type="radio"]:checked').attr("value");//man
+
+                //设置发给服务器的json数据
+                var formdata={
+                    type:"101", //登录状态码
+                    nickname:nickname,
+                    imageUrl:imageUrl,
+                    inLine:inLine,
+                    sex:sex
+                };
+                clientSocket.send(formdata);
+            });
+            //获取1-2用户发送消息
+            $("#sendBtn").on("click",function(){
+                if($("#sendmasege").val()==""){
+                    alert("请输入消息后再发送");
+                    return;
+                };
+                var sendMSG=$("#sendmasege").val();
+                var everyoneMSG={//发送用户的输入信息
+                    type:"201",
+                    sendMSG:sendMSG,
+                };
+                $("#sendmasege").val("");//清空用户的输入内容
+                clientSocket.send(everyoneMSG);//向服务器发送用户内容
+            })
+            //用户点击右上角叉叉信息
+            var close=false;//判断聊天室是否被关闭
+            $("#closeBtn").on("click",function(){
+                close=true;//确定被聊天室被关闭
+                $("#chat").slideDown("fast");
+                $("#Login").show();
+
+                var leaveMSG={
+                    type:"300",
+
+                };
+                clientSocket.send(leaveMSG);
+            });
+            window.onunload = function(){
+                //聊天室界面的时候关闭浏览器模拟close被点击
+                if(close==false){
+                    return $("#closeBtn").click();
+                };
+            };
+
+
+            //3）接收服务端传过来的信息
+            clientSocket.on("message",function(data){
+               // alert(JSON.stringify(data));
+                var type=data.type;
+                //时刻显示当前人数
+
+                switch (type){
+                    case "100"://显示页面
+                   showChatroom(data);
+                    break;
+                    case "101"://某用户登录时向所有人群发登录消息
+                    showSomeOneLogin(data);
+                    break;
+                    case "200"://某用户登录时向所有人群发登录消息
+                        slefMSG(data);
+                        break;
+                    case "201"://某用户登录时向所有人群发登录消息
+                        otherMSG(data);
+                        break;
+                    case "300"://某用户离开聊天室
+                        Userleave(data);
+                        break;
+
+                }
+            });
+
+            var seximg;
+            //100 登陆界面显示
+            function showChatroom(data){
+                 $("#Login").hide();
+                 $("#chat").show();
+                $("#msgBox").html("");
+                $("#sidebarul").empty();
+                 var systemmsg="<div class='text-danger'>[系统消息]  "+data.nickname+"  欢迎进入聊天室</div>"
+                 $("#msgBox").append(systemmsg);
+
+                //====================================================
+                //console.log("每个人登录时自己现存",data.UserArr,(data.UserArr).length);
+
+                $("#numOfPeople").html((data.UserArr).length+"/10");//显示当前在线人数
+                var UserArr=data.UserArr;
+                for(var i=0;i<UserArr.length;i++){
+                    UserArr[i].index=i;
+                    if(UserArr[i].nickname==data.nickname){//判断第i个的名字是不是和nickname一样。如果一样那么就是我
+                        UserArr[i].nickname+="[我]";
+                    };
+                    if(UserArr[i].sex=="man"){
+                        seximg=" ♂ ";
+                    }else{
+                        seximg=" ♀ ";
+                    }
+                    var sidebar='<li class="list-group-item"><span class="badge">'+UserArr[i].inLine+'</span><img src="'+UserArr[i].imageUrl+'" alt="photo">'+UserArr[i].nickname+seximg+'</li>'
+                    $("#sidebarul").append(sidebar);
+                };
+
+            };
+            // 101 向所有用户群发某人上线的消息
+            function showSomeOneLogin(data){
+                var SomeOneLogin="<div class='text-info'>[系统消息]"+data.nickname+"已经进入聊天室</div>";
+                $("#msgBox").append(SomeOneLogin);//将提示内容添加到聊天界面中
+                if(data.sex=="man"){
+                    seximg=" ♂ ";
+                }else{
+                    seximg=" ♀ ";
+                }
+                //每个人都会对应显示已经加入聊天室的人的人
+                var sidebar='<li class="list-group-item"><span class="badge">'+data.inLine+'</span><img src="'+data.imageUrl+'" alt="photo">'+data.nickname+seximg+'</li>'
+                $("#sidebarul").append(sidebar);
+                scorll();//设置消息保持底部
+
+                $("#numOfPeople").html((data.UserArr).length+"/10");//推送当前在线人数
+
+            };
+            //200 自己内容框显示自己的消息
+            function slefMSG(data){
+                var selfcont="<div class='clearfix pull-left mt10'><div class='chatbox pull-left'><img src="+data.imageUrl+"></div><div class='pull-left text-left msgchatbox'><p class='text-success'>[我]</p><div class='pull-left msgchatbox'>"+data.sendMSG+"</div></div></div>"
+                $("#msgBox").append(selfcont);
+                scorll();
+            };
+            //201 群发送给其他人的消息
+            function otherMSG(data){
+                var selfcont="<div class='clearfix pull-right mt10'><div class='chatbox pull-right'><img src="+data.imageUrl+"></div><div class='pull-right text-left msgchatbox'><p class=' text-right text-warning'>"+data.nickname+"</p><div class='pull-right text-left msgchatbox'>"+data.sendMSG+"</div></div></div>"
+                $("#msgBox").append(selfcont);
+                scorll();
+            }
+            //300 某用户离开群发消息
+            function  Userleave(data){
+                var leavemsg="<div class='text-info'>[系统消息]"+data.nickname+"离开聊天室</div>";
+                //console.log("300状态码的"+JSON.stringify(data.UserArr))
+                $("#msgBox").append(leavemsg);
+                $("#numOfPeople").html((data.UserArr).length+"/10");//退出的时候更换数字
+                $("#sidebarul").empty();
+
+                var UserArr=data.UserArr;
+                for(var i=0;i<UserArr.length;i++){
+                    var sidebar='<li class="list-group-item"><span class="badge">'+UserArr[i].inLine+'</span><img src="'+UserArr[i].imageUrl+'" alt="photo">'+UserArr[i].nickname+seximg+'</li>'
+                    $("#sidebarul").append(sidebar);//把每个人列表全部清空并且放入删除之后的数组
+                };
+
+           };
+            //4 ===========================功能型函数============================
+            //设置消息保持底部
+            function scorll(){
+                $("#msgBox").scrollTop($("#msgBox").prop("scrollHeight"));
+            };
+            //设置enter出发send事件
+            $("#sendmasege").on("keyup",function(e){
+
+
+                if(e.keyCode==13 ){
+                    if($("#sendmasege").val()==""){
+                        alert("请输入消息后再发送");
+                        return;
+                    };
+                    $("#sendBtn").click();
+                };
+            });
+        })
+    </script>
+
+
+</head>
+<body>
+<!------------Login界面-------------------------->
+<div class="modals container" id="Login">
+    <h3 class="h1 text-center text-info">User Login</h3>
+    <div class="pt">
+        <div class="photo" id="photo"><img src="images/pt1.jpg" alt="photo"></div>
+        <ul class="photobox" id="photobox">
+            <li><img src="images/pt1.jpg" alt=""></li>
+            <li><img src="images/pt2.jpg" alt=""></li>
+            <li><img src="images/pt3.jpg" alt=""></li>
+            <li><img src="images/pt4.jpg" alt=""></li>
+            <li><img src="images/pt5.jpg" alt=""></li>
+            <li><img src="images/pt6.jpg" alt=""></li>
+            <li><img src="images/pt7.jpg" alt=""></li>
+            <li><img src="images/pt8.jpg" alt=""></li>
+            <li><img src="images/pt9.jpg" alt=""></li>
+            <li><img src="images/pt10.jpg" alt=""></li>
+            <li><img src="images/pt11.jpg" alt=""></li>
+            <li><img src="images/pt12.jpg" alt=""></li>
+            <li><img src="images/pt13.jpg" alt=""></li>
+            <li><img src="images/pt14.jpg" alt=""></li>
+            <li><img src="images/pt15.jpg" alt=""></li>
+            <li><img src="images/pt16.jpg" alt=""></li>
+            <li><img src="images/pt17.jpg" alt=""></li>
+            <li><img src="images/pt18.jpg" alt=""></li>
+        </ul>
+    </div>
+    <div class="clearfix">
+        <div action="/public" role="form" class="center-block clearfix col-lg-8 col-md-4">
+            <div class="form-group">
+                <input type="text" class="form-control" placeholder="Enter User Name" name="username" id="username">
+                <select name="condition" id="condition" class="form-control">
+                    <option value="在线">在线</option>
+                    <option value="忙碌">忙碌</option>
+                    <option value="离开">离开</option>
+                </select>
+            </div>
+            <div class="radio col-lg-4">
+                <label><input type="radio"  name="sex" value="man" checked > 男性</label>
+                <label><input type="radio"  name="sex" value="woman"> 女性</label>
+            </div>
+            <input type="submit" class="btn-warning btn col-lg-12 btn-lg" value="进入聊天室" id="sub">
+        </div>
+    </div>
+</div>
+<!------------聊天室界面-------------------------->
+<div class="warp" id="chat">
+    <div class="container ">
+        <div class="panel">
+            <div class="panel-heading">
+                <h4 class="h4 panel-title  text-center">
+                    欢迎进入聊天室
+                    <span id="numOfPeople"></span>
+                    <button type="button" class="close" id="closeBtn"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                </h4>
+            </div>
+            <hr>
+            <div class="panel-body">
+                <div class=" pull-left col-lg-2" id="box">
+                    <ul class="list-group" id="sidebarul">
+                       <!-- <li class="list-group-item">
+                            <img src="images/mm1.jpg" alt="photo">用户名
+                            &lt;!&ndash;<div class="showcont" id="showUser">
+                                <div><img src="images/mm1.jpg" alt=""></div>
+                                <hr>
+                                <div class="text-center">
+                                    <p class="h4">userName:用户名</p>
+                                    <p class="h4">sex:nannv</p>
+                                    <strong>忙碌 </strong>
+                                </div>
+                            </div>&ndash;&gt;
+                        </li>-->
+                    </ul>
+                </div>
+                <div class="col-lg-9 text-center">
+                    <div class="showmasege clearfix"  id="msgBox"></div>
+                    <textarea name="sendmasege" id="sendmasege" cols="30" rows="10"></textarea>
+                    <button type="submit" class="btn btn-info" id="sendBtn">Send(Enter)</button>
+                </div>
+            </div>
+            <div class="panel-footer text-center">
+                copyRight&copy; by-yw
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

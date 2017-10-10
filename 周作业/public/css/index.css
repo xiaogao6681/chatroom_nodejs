@@ -1,0 +1,15 @@
+body,h1,h2,h3,h4,h5,h6,p,ul,ol,li{margin:0;
+    padding:0;}
+body{background: url("../images/body1.jpg") no-repeat;width: 100%;background-size: cover}
+.modals{width:800px;height:500px;background: rgba(255,255,255,0.2);margin:200px auto;}
+.form-control{background-color:rgba(255, 255, 255, 0.2); color: #fff;width:70%;display: inline-block}
+.center-block{margin-left:150px;}
+.btn-warning{margin:150px auto;}
+.pt{position: relative}
+.photo{margin:20px auto;width:80px;height:80px;border-radius:50%;overflow: hidden;}
+.photo img{width:80px;height:80px;}
+.photobox{background-color:rgba(255, 255, 255, 0.8);width:600px;height:300px;position:absolute;top:100px;left:50%;margin-left:-300px;border-radius:10px;z-index:10;display: none;}
+.photobox li{width:80px;height:80px;float:left;margin:10px;border-radius: 50%;overflow: hidden;}
+.photobox li img{width:80px;height:80px;}
+.radio{margin: 0 0 0 155px;}
+#condition{color: #0B4877;width:20%;margin-right:15px;}

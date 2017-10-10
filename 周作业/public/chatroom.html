@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chatroom</title>
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <link rel="stylesheet" href="css/room.css">
+    <script src="js/jquery-3.0.0.min.js"></script>
+    <script>
+        $(function(){
+            //给每一个li绑定移入移除显示事件
+            $(".showcont").hide();
+            $(".list-group li").on("click",function(){
+                $(this).addClass("ac").siblings().removeClass("ac");
+                //$(this).siblings.find(".showcont").remove();
+                $('<div class="showcont">lalalala</div>').appendTo($(this));
+
+
+            });
+        })
+    </script>
+</head>
+<body>
+<div class="container">
+    <div class="panel">
+        <div class="panel-heading">
+            <h4 class="h4 panel-title  text-center">
+                欢迎进入聊天室
+                 <button type="button" class="close"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </h4>
+
+        </div>
+        <hr>
+        <div class="panel-body">
+
+                <ul class="list-group col-lg-2">
+                    <li class="list-group-item">
+                        <img src="images/mm1.jpg" alt="photo">用户名
+                        <!--<div class="showcont">lalalala</div>-->
+                    </li>
+                    <li class="list-group-item">
+                        <img src="images/mm1.jpg" alt="photo">用户名
+                        <div class="showcont">lalalala</div>
+                    </li>
+                    <li class="list-group-item">
+                        <span class="badge">离开</span>
+                        <img src="images/mm1.jpg" alt="photo">用户名
+                        <div class="showcont">lalalala</div>
+                    </li>
+                    <li class="list-group-item">
+                        <span class="badge">下线</span>
+                        <img src="images/mm1.jpg" alt="photo">用户名
+                        <div class="showcont">lalalala</div>
+                    </li>
+                </ul>
+
+            <div class="col-lg-9 text-center">
+                <div class="showmasege">聊天内容</div>
+                <textarea name="sendmasege" id="sendmasege" cols="30" rows="10"></textarea>
+                <button type="submit" class="btn btn-info">Send(Enter+shift)</button>
+            </div>
+        </div>
+        <div class="panel-footer text-center">
+            copyRight&copy; by-yw
+        </div>
+    </div>
+</div>
+</body>
+</html>

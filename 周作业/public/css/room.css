@@ -1,0 +1,23 @@
+.warp{background: url("../images/body3.jpg") no-repeat;background-size:cover;color:#fff;}
+.hide{display: none;}
+hr{margin:0}
+/*.container{margin:170px auto;}*/
+.panel{margin:210px auto;}
+.panel,.panel-footer,.list-group-item{background-color: rgba(255,255,255,0.2); }
+.panel-body{min-height: 500px;max-height:600px;position: relative;}
+#sidebarul{position:relative;top:0;max-height:500px;}
+.col-lg-2,.col-lg-9{background-color:rgba(112,128,144,0.75);min-height:500px;padding:0;border-radius: 5px;}
+.col-lg-9{margin-left: 10px;width: 82%;position: relative;}
+#sendmasege{width:890px;resize: none;height:150px;background-color: rgba(255,255,255,0.2); position: absolute;bottom: 50px;left:10px;}
+.showmasege{overflow:auto;padding:8px 0;width:890px;height:280px;margin-left:10px;margin-top:10px;background-color: rgba(255,255,255,0.2);}
+.col-lg-9 .btn{position: absolute;right:10px;bottom: 10px;}
+.list-group-item{position: relative;padding: 8px 8px;}
+.list-group-item img{width:30px;height:30px;border-radius: 50%;overflow: hidden;margin-right: 10px;}
+.badge{margin-top:5px;}
+.showcont{min-width:300px;height:200px;background-color:rgba(255,255,255,0.35);position: absolute;right: -310px;top:10px;z-index: 10;border-radius: 5px; }
+.ac{background-color:rgba(112,128,144,0.75);}
+.chatbox{mix-width:200px;min-height:40px; max-width:600px;padding-left:10px;}
+.chatbox img{width:40px;height:40px;border-radius: 50%;overflow: hidden;margin-right: 10px;}
+.msgchatbox{max-width:500px;word-wrap: break-word}
+.mt10{margin-top:10px;width:100%;}
+#showUserinfo img{width:80px;height:80px;border-radius: 50%;overflow: hidden;margin:10px auto;display: block;}
